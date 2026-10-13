@@ -20,7 +20,10 @@ async function ensureConnected() {
   if (global.db) return;
   if (!connecting) {
     connecting = (async () => {
-      const client = new MongoClient(MONGODB_URI);
+      const client = new MongoClient(MONGODB_URI, {
+        serverSelectionTimeoutMS: 10000,
+        connectTimeoutMS: 10000,
+      });
       await client.connect();
       global.db = client.db(DB_NAME);
       await global.db.collection('users').createIndex({ email: 1 }, { unique: true });

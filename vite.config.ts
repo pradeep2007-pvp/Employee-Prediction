@@ -1,11 +1,13 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv as viteLoadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
-import { config as loadEnv } from 'dotenv';
 import type { Plugin } from 'vite';
 import { createApiApp } from './server/api';
 
-loadEnv();
+const env = viteLoadEnv('development', process.cwd(), '');
+for (const [key, value] of Object.entries(env)) {
+  if (!process.env[key]) process.env[key] = value;
+}
 
 function expressPlugin(): Plugin {
   let apiApp: Awaited<ReturnType<typeof createApiApp>> | null = null;
