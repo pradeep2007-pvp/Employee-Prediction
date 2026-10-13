@@ -7,7 +7,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/context/AuthContext';
 import { fetchModelMetrics, getOrTrainModels, clearModelCache, type TrainedModels } from '@/lib/ml/service';
-import type { ModelMetrics } from '@/lib/supabase';
+import type { ModelMetrics } from '@/lib/api';
 import { formatDateTime } from '@/lib/constants';
 import toast from 'react-hot-toast';
 

@@ -14,7 +14,7 @@ import { TableSkeleton } from '@/components/ui/LoadingSkeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useEmployees } from '@/hooks/useData';
 import { DEPARTMENTS, formatCurrency, formatPercent, getRiskLevel } from '@/lib/constants';
-import type { Employee } from '@/lib/supabase';
+import type { Employee } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 type SortField = 'name' | 'department' | 'years_of_experience' | 'attrition_probability' | 'predicted_salary';

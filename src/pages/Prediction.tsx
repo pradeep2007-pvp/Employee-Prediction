@@ -11,7 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useEmployees, usePredictions } from '@/hooks/useData';
 import { getOrTrainModels, runPrediction, type PredictionResult, type TrainedModels } from '@/lib/ml/service';
 import { DEPARTMENTS, JOB_ROLES, EDUCATION_LEVELS, GENDERS, SATISFACTION_LABELS, formatCurrency, formatPercent, PREDICTION_THRESHOLD } from '@/lib/constants';
-import type { PredictionInput } from '@/lib/supabase';
+import type { PredictionInput } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 const initialForm: PredictionInput & { name: string } = {

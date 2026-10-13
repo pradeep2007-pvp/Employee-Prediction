@@ -1,7 +1,7 @@
 // ML Service: orchestrates preprocessing, training, prediction, and persistence.
-// Models are trained on a synthetic dataset and metrics are stored in Supabase.
+// Models are trained on a synthetic dataset and metrics are stored via the API.
 
-import { supabase, type PredictionInput, type ModelMetrics } from '../supabase';
+import { metricsApi, type PredictionInput, type ModelMetrics } from '../api';
 import { getRiskLevel, PREDICTION_THRESHOLD } from '../constants';
 import { buildPreprocessor, encode, type Preprocessor } from './preprocessing';
 import {
@@ -80,14 +80,9 @@ export async function getOrTrainModels(userId: string): Promise<TrainedModels> {
   const trainedAt = new Date().toISOString();
   const trainingSamples = train.length;
 
-  // Persist metrics to Supabase
   try {
-    // Delete old metrics for this user
-    await supabase.from('model_metrics').delete().eq('user_id', userId);
-
-    await supabase.from('model_metrics').insert([
+    await metricsApi.create([
       {
-        user_id: userId,
         model_type: 'Logistic Regression',
         metrics: {
           accuracy: logisticMetrics.accuracy,
@@ -100,7 +95,6 @@ export async function getOrTrainModels(userId: string): Promise<TrainedModels> {
         training_samples: trainingSamples,
       },
       {
-        user_id: userId,
         model_type: 'Multiple Linear Regression',
         metrics: {
           mae: linearMetrics.mae,
@@ -113,7 +107,6 @@ export async function getOrTrainModels(userId: string): Promise<TrainedModels> {
       },
     ]);
   } catch (e) {
-    // Metrics persistence is non-critical — models still work
     console.warn('Failed to persist model metrics:', e);
   }
 
@@ -158,15 +151,8 @@ export function runPrediction(models: TrainedModels, input: PredictionInput): Pr
   };
 }
 
-export async function fetchModelMetrics(userId: string): Promise<ModelMetrics[]> {
-  const { data, error } = await supabase
-    .from('model_metrics')
-    .select('*')
-    .eq('user_id', userId)
-    .order('trained_at', { ascending: false });
-
-  if (error) throw error;
-  return data || [];
+export async function fetchModelMetrics(_userId: string): Promise<ModelMetrics[]> {
+  return metricsApi.list();
 }
 
 export function clearModelCache() {
@@ -263,10 +249,8 @@ export async function trainFromDataset(userId: string, datasetRows: DatasetRow[]
   const trainingSamples = train.length;
 
   try {
-    await supabase.from('model_metrics').delete().eq('user_id', userId);
-    await supabase.from('model_metrics').insert([
+    await metricsApi.create([
       {
-        user_id: userId,
         model_type: 'Logistic Regression',
         metrics: {
           accuracy: logisticMetrics.accuracy,
@@ -279,7 +263,6 @@ export async function trainFromDataset(userId: string, datasetRows: DatasetRow[]
         training_samples: trainingSamples,
       },
       {
-        user_id: userId,
         model_type: 'Multiple Linear Regression',
         metrics: { mae: linearMetrics.mae, mse: linearMetrics.mse, rmse: linearMetrics.rmse, r2: linearMetrics.r2 },
         trained_at: trainedAt,

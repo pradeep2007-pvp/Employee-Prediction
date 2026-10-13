@@ -9,7 +9,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { usePredictions } from '@/hooks/useData';
 import { DEPARTMENTS, formatCurrency, formatPercent, formatDate, getRiskLevel } from '@/lib/constants';
-import type { Prediction } from '@/lib/supabase';
+import type { Prediction } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 export function HistoryPage() {
