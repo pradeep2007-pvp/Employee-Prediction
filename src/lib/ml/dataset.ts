@@ -3,7 +3,7 @@
 // The generator produces realistic employee records with correlated
 // attrition and salary patterns so the models learn meaningful relationships.
 
-import type { PredictionInput } from '../supabase';
+import type { PredictionInput } from '../api';
 import { DEPARTMENTS, EDUCATION_LEVELS, GENDERS, JOB_ROLES } from '../constants';
 
 function randomChoice<T>(arr: readonly T[]): T {

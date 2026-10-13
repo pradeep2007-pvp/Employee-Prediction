@@ -1,6 +1,6 @@
 // Data preprocessing pipeline: encoding, scaling, missing values
 
-import type { PredictionInput } from '../supabase';
+import type { PredictionInput } from '../api';
 import { DEPARTMENTS, EDUCATION_LEVELS, GENDERS, JOB_ROLES } from '../constants';
 import { mean, std } from './linalg';
 

@@ -2,7 +2,7 @@
 // All fields are optional — missing columns use sensible defaults so any
 // reasonable employee CSV can be loaded without parsing issues.
 
-import type { PredictionInput } from '../supabase';
+import type { PredictionInput } from '../api';
 import { DEPARTMENTS, EDUCATION_LEVELS, GENDERS, JOB_ROLES } from '../constants';
 
 export type DatasetRow = PredictionInput & {
