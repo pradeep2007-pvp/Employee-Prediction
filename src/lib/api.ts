@@ -1,100 +1,7 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-
-const TOKEN_KEY = 'hr_dataminer_token';
-const USER_KEY = 'hr_dataminer_user';
-
-export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
-}
-
-export function setToken(token: string) {
-  localStorage.setItem(TOKEN_KEY, token);
-}
-
-export function clearToken() {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(USER_KEY);
-}
-
-export function getStoredUser(): { id: string; email: string } | null {
-  const raw = localStorage.getItem(USER_KEY);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-
-export function setStoredUser(user: { id: string; email: string }) {
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
-}
-
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = getToken();
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-
-  const res = await fetch(`${API_URL}${path}`, { ...options, headers });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(body.error || `HTTP ${res.status}`);
-  }
-  if (res.status === 204) return undefined as T;
-  return res.json();
-}
-
-// ---- Auth ----
-export const api = {
-  async register(email: string, password: string) {
-    const data = await request<{ token: string; user: { id: string; email: string } }>('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-    setToken(data.token);
-    setStoredUser(data.user);
-    return data;
-  },
-
-  async login(email: string, password: string) {
-    const data = await request<{ token: string; user: { id: string; email: string } }>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-    setToken(data.token);
-    setStoredUser(data.user);
-    return data;
-  },
-
-  logout() {
-    clearToken();
-  },
-
-  async getMe() {
-    return request<{ id: string; email: string }>('/auth/me');
-  },
-
-  async resetPassword(email: string, newPassword: string) {
-    return request<{ success: boolean }>('/auth/reset-password', {
-      method: 'POST',
-      body: JSON.stringify({ email, newPassword }),
-    });
-  },
-
-  async checkEmail(email: string) {
-    return request<{ exists: boolean }>('/auth/check-email', {
-      method: 'POST',
-      body: JSON.stringify({ email }),
-    });
-  },
-};
+import { supabase } from './supabase';
 
 // ---- Types ----
 export type Employee = {
-  _id?: string;
   id: string;
   user_id: string;
   employee_id: string;
@@ -121,7 +28,6 @@ export type Employee = {
 };
 
 export type Prediction = {
-  _id?: string;
   id: string;
   user_id: string;
   employee_id: string;
@@ -137,7 +43,6 @@ export type Prediction = {
 };
 
 export type ModelMetrics = {
-  _id?: string;
   id: string;
   user_id: string;
   model_type: string;
@@ -165,25 +70,85 @@ export type PredictionInput = {
 
 // ---- Employees ----
 export const employeeApi = {
-  list: () => request<Employee[]>('/employees'),
-  create: (data: Omit<Employee, 'id' | 'user_id' | 'created_at' | 'updated_at'>) =>
-    request<Employee>('/employees', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id: string, updates: Partial<Employee>) =>
-    request<Employee>(`/employees/${id}`, { method: 'PUT', body: JSON.stringify(updates) }),
-  remove: (id: string) => request<{ success: boolean }>(`/employees/${id}`, { method: 'DELETE' }),
+  async list(): Promise<Employee[]> {
+    const { data, error } = await supabase
+      .from('employees')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw new Error(error.message);
+    return (data || []) as Employee[];
+  },
+
+  async create(input: Omit<Employee, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Employee> {
+    const { data, error } = await supabase
+      .from('employees')
+      .insert(input)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return data as Employee;
+  },
+
+  async update(id: string, updates: Partial<Employee>): Promise<Employee> {
+    const { data, error } = await supabase
+      .from('employees')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return data as Employee;
+  },
+
+  async remove(id: string): Promise<{ success: boolean }> {
+    const { error } = await supabase.from('employees').delete().eq('id', id);
+    if (error) throw new Error(error.message);
+    return { success: true };
+  },
 };
 
 // ---- Predictions ----
 export const predictionApi = {
-  list: () => request<Prediction[]>('/predictions'),
-  create: (data: Omit<Prediction, 'id' | 'user_id' | 'created_at'>) =>
-    request<Prediction>('/predictions', { method: 'POST', body: JSON.stringify(data) }),
-  remove: (id: string) => request<{ success: boolean }>(`/predictions/${id}`, { method: 'DELETE' }),
+  async list(): Promise<Prediction[]> {
+    const { data, error } = await supabase
+      .from('predictions')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw new Error(error.message);
+    return (data || []) as Prediction[];
+  },
+
+  async create(input: Omit<Prediction, 'id' | 'user_id' | 'created_at'>): Promise<Prediction> {
+    const { data, error } = await supabase
+      .from('predictions')
+      .insert(input)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return data as Prediction;
+  },
+
+  async remove(id: string): Promise<{ success: boolean }> {
+    const { error } = await supabase.from('predictions').delete().eq('id', id);
+    if (error) throw new Error(error.message);
+    return { success: true };
+  },
 };
 
 // ---- Model Metrics ----
 export const metricsApi = {
-  list: () => request<ModelMetrics[]>('/metrics'),
-  create: (metrics: Array<{ model_type: string; metrics: Record<string, number | number[][]>; trained_at: string; training_samples: number }>) =>
-    request<{ insertedCount: number }>('/metrics', { method: 'POST', body: JSON.stringify(metrics) }),
+  async list(): Promise<ModelMetrics[]> {
+    const { data, error } = await supabase
+      .from('model_metrics')
+      .select('*')
+      .order('trained_at', { ascending: false });
+    if (error) throw new Error(error.message);
+    return (data || []) as ModelMetrics[];
+  },
+
+  async create(metrics: Array<{ model_type: string; metrics: Record<string, number | number[][]>; trained_at: string; training_samples: number }>): Promise<{ insertedCount: number }> {
+    const { error } = await supabase.from('model_metrics').insert(metrics);
+    if (error) throw new Error(error.message);
+    return { insertedCount: metrics.length };
+  },
 };

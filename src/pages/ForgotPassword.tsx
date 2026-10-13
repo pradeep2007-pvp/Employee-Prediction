@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, ArrowLeft, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
-import { api } from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import { Logo } from '@/components/Logo';
 import { Button } from '@/components/ui/Button';
 import toast from 'react-hot-toast';
@@ -27,8 +27,13 @@ export function ForgotPassword() {
 
     setLoading(true);
     try {
-      await api.checkEmail(email);
-      setStep('reset');
+      const { data } = await supabase.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: false },
+      });
+      if (data) {
+        setStep('reset');
+      }
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -55,7 +60,8 @@ export function ForgotPassword() {
 
     setLoading(true);
     try {
-      await api.resetPassword(email, newPassword);
+      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+      if (updateError) throw updateError;
       setStep('done');
       toast.success('Password reset successfully!');
     } catch (e) {
