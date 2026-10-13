@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'hr-dataminer-dev-secret';
+function getJwtSecret(): string {
+  return process.env.JWT_SECRET || 'hr-dataminer-dev-secret';
+}
 
 export function authMiddleware(req: Request, res: Response, next: NextFunction) {
   const header = req.headers.authorization;
@@ -10,7 +12,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
   }
   const token = header.slice(7);
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as { userId: string; email: string };
+    const payload = jwt.verify(token, getJwtSecret()) as { userId: string; email: string };
     (req as any).userId = payload.userId;
     (req as any).email = payload.email;
     next();
@@ -19,4 +21,6 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
   }
 }
 
-export { JWT_SECRET };
+export function getSecret(): string {
+  return getJwtSecret();
+}

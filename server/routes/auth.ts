@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from '../middleware/auth';
+import { getSecret } from '../middleware/auth';
 
 const router = Router();
 
@@ -21,7 +21,7 @@ router.post('/register', async (req: Request, res: Response) => {
     created_at: new Date().toISOString(),
   });
 
-  const token = jwt.sign({ userId: result.insertedId.toString(), email: email.toLowerCase() }, JWT_SECRET);
+  const token = jwt.sign({ userId: result.insertedId.toString(), email: email.toLowerCase() }, getSecret());
   res.status(201).json({
     token,
     user: { id: result.insertedId.toString(), email: email.toLowerCase() },
@@ -39,7 +39,7 @@ router.post('/login', async (req: Request, res: Response) => {
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) return res.status(401).json({ error: 'Invalid email or password' });
 
-  const token = jwt.sign({ userId: user._id.toString(), email: user.email }, JWT_SECRET);
+  const token = jwt.sign({ userId: user._id.toString(), email: user.email }, getSecret());
   res.json({
     token,
     user: { id: user._id.toString(), email: user.email },
@@ -50,7 +50,7 @@ router.get('/me', async (req: Request, res: Response) => {
   const header = req.headers.authorization;
   if (!header?.startsWith('Bearer ')) return res.status(401).json({ error: 'No token' });
   try {
-    const payload = jwt.verify(header.slice(7), JWT_SECRET) as { userId: string; email: string };
+    const payload = jwt.verify(header.slice(7), getSecret()) as { userId: string; email: string };
     res.json({ id: payload.userId, email: payload.email });
   } catch {
     res.status(401).json({ error: 'Invalid token' });

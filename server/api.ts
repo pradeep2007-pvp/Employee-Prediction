@@ -1,14 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import { MongoClient, Db } from 'mongodb';
-import { JWT_SECRET } from './middleware/auth';
+import { getSecret } from './middleware/auth';
 import authRoutes from './routes/auth';
 import employeeRoutes from './routes/employees';
 import predictionRoutes from './routes/predictions';
 import metricsRoutes from './routes/metrics';
-
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017';
-const DB_NAME = process.env.MONGODB_DB || 'hr_dataminer';
 
 declare global {
   var db: Db;
@@ -20,17 +17,20 @@ async function ensureConnected() {
   if (global.db) return;
   if (!connecting) {
     connecting = (async () => {
-      const client = new MongoClient(MONGODB_URI, {
+      const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017';
+      const dbName = process.env.MONGODB_DB || 'hr_dataminer';
+      console.log('Connecting to MongoDB:', uri.replace(/\/\/[^@]+@/, '//***:***@'));
+      const client = new MongoClient(uri, {
         serverSelectionTimeoutMS: 10000,
         connectTimeoutMS: 10000,
       });
       await client.connect();
-      global.db = client.db(DB_NAME);
+      global.db = client.db(dbName);
       await global.db.collection('users').createIndex({ email: 1 }, { unique: true });
       await global.db.collection('employees').createIndex({ user_id: 1 });
       await global.db.collection('predictions').createIndex({ user_id: 1 });
       await global.db.collection('model_metrics').createIndex({ user_id: 1 });
-      console.log('MongoDB connected:', DB_NAME);
+      console.log('MongoDB connected:', dbName);
     })();
   }
   await connecting;
@@ -52,4 +52,4 @@ export async function createApiApp() {
   return app;
 }
 
-export { JWT_SECRET };
+export { getSecret };
