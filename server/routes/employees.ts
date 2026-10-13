@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { ObjectId } from 'mongodb';
 import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
@@ -28,13 +29,12 @@ router.post('/', async (req: Request, res: Response) => {
 
 router.put('/:id', async (req: Request, res: Response) => {
   const userId = (req as any).userId;
-  const { id } = req.params;
+  const id = String(req.params.id);
   const updates = { ...req.body, updated_at: new Date().toISOString() };
   delete updates._id;
   delete updates.id;
   delete updates.user_id;
 
-  const { ObjectId } = await import('mongodb');
   if (!ObjectId.isValid(id)) return res.status(400).json({ error: 'Invalid id' });
 
   const result = await global.db.collection('employees').findOneAndUpdate(
@@ -48,8 +48,7 @@ router.put('/:id', async (req: Request, res: Response) => {
 
 router.delete('/:id', async (req: Request, res: Response) => {
   const userId = (req as any).userId;
-  const { id } = req.params;
-  const { ObjectId } = await import('mongodb');
+  const id = String(req.params.id);
   if (!ObjectId.isValid(id)) return res.status(400).json({ error: 'Invalid id' });
 
   const result = await global.db.collection('employees').deleteOne({ _id: new ObjectId(id), user_id: userId });
