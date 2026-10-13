@@ -57,4 +57,33 @@ router.get('/me', async (req: Request, res: Response) => {
   }
 });
 
+router.post('/check-email', async (req: Request, res: Response) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email required' });
+
+  const db = global.db;
+  const user = await db.collection('users').findOne({ email: email.toLowerCase() });
+  if (!user) return res.status(404).json({ error: 'No account found with that email' });
+
+  res.json({ exists: true });
+});
+
+router.post('/reset-password', async (req: Request, res: Response) => {
+  const { email, newPassword } = req.body;
+  if (!email || !newPassword) return res.status(400).json({ error: 'Email and new password required' });
+  if (newPassword.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+
+  const db = global.db;
+  const user = await db.collection('users').findOne({ email: email.toLowerCase() });
+  if (!user) return res.status(404).json({ error: 'No account found with that email' });
+
+  const hashed = await bcrypt.hash(newPassword, 10);
+  await db.collection('users').updateOne(
+    { email: email.toLowerCase() },
+    { $set: { password: hashed, updated_at: new Date().toISOString() } }
+  );
+
+  res.json({ success: true });
+});
+
 export default router;

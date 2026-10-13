@@ -76,6 +76,20 @@ export const api = {
   async getMe() {
     return request<{ id: string; email: string }>('/auth/me');
   },
+
+  async resetPassword(email: string, newPassword: string) {
+    return request<{ success: boolean }>('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, newPassword }),
+    });
+  },
+
+  async checkEmail(email: string) {
+    return request<{ exists: boolean }>('/auth/check-email', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  },
 };
 
 // ---- Types ----

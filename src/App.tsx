@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Login } from '@/pages/Login';
+import { ForgotPassword } from '@/pages/ForgotPassword';
 import { Dashboard } from '@/pages/Dashboard';
 import { Prediction } from '@/pages/Prediction';
 import { Employees } from '@/pages/Employees';
@@ -32,6 +33,7 @@ function App() {
         />
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/predict" element={<ProtectedRoute><Prediction /></ProtectedRoute>} />
           <Route path="/dataset" element={<ProtectedRoute><Dataset /></ProtectedRoute>} />

@@ -159,7 +159,7 @@ export function Login() {
                     />
                     Remember me
                   </label>
-                  <button type="button" className="text-sm text-brand-600 hover:text-brand-700 font-medium">
+                  <button type="button" onClick={() => navigate('/forgot-password')} className="text-sm text-brand-600 hover:text-brand-700 font-medium">
                     Forgot password?
                   </button>
                 </div>
