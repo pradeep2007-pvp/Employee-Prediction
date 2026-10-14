@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { User, Bell, Palette, LogOut, Mail, Shield } from 'lucide-react';
+import { User, Bell, Palette, LogOut, Mail, Shield, Loader2 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Toggle } from '@/components/ui/Toggle';
+import { Modal } from '@/components/ui/Modal';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 
 export function Settings() {
@@ -18,12 +20,52 @@ export function Settings() {
   });
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
+
   const handleSave = () => {
     toast.success('Settings saved successfully.');
   };
 
   const handleSignOut = async () => {
     await signOut();
+  };
+
+  const openPasswordModal = () => {
+    setNewPassword('');
+    setConfirmPassword('');
+    setPasswordError('');
+    setPasswordModalOpen(true);
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordError('');
+
+    if (newPassword.length < 6) {
+      setPasswordError('Password must be at least 6 characters.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Passwords do not match.');
+      return;
+    }
+
+    setChangingPassword(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setChangingPassword(false);
+
+    if (error) {
+      setPasswordError(error.message);
+      return;
+    }
+
+    toast.success('Password updated successfully.');
+    setPasswordModalOpen(false);
+    setNewPassword('');
+    setConfirmPassword('');
   };
 
   return (
@@ -70,7 +112,7 @@ export function Settings() {
                 </div>
                 <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-lg">Verified</span>
               </div>
-              <Button variant="outline" size="sm">Change Password</Button>
+              <Button variant="outline" size="sm" onClick={openPasswordModal}>Change Password</Button>
             </div>
           </div>
 
@@ -151,6 +193,36 @@ export function Settings() {
           </div>
         </div>
       </div>
+
+      <Modal open={passwordModalOpen} onClose={() => setPasswordModalOpen(false)} title="Change Password" size="sm">
+        <div className="space-y-4">
+          <Input
+            label="New Password"
+            type="password"
+            isPassword
+            placeholder="Enter new password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+          />
+          <Input
+            label="Confirm Password"
+            type="password"
+            isPassword
+            placeholder="Re-enter new password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            error={passwordError || undefined}
+          />
+          <div className="flex gap-3 pt-2">
+            <Button variant="outline" onClick={() => setPasswordModalOpen(false)} className="flex-1">
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleChangePassword} disabled={changingPassword} className="flex-1">
+              {changingPassword ? <Loader2 size={18} className="animate-spin" /> : 'Update Password'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </DashboardLayout>
   );
 }
