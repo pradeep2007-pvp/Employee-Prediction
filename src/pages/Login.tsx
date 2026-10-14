@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Brain, Mail, Lock, AlertCircle } from 'lucide-react';
+import { Brain, Mail, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -133,20 +133,14 @@ export function Login() {
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-navy-700">Password</label>
-                <div className="relative">
-                  <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    className="input-base pl-10"
-                    autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                  />
-                </div>
-              </div>
+              <Input
+                label="Password"
+                isPassword
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+              />
 
               {mode === 'login' && (
                 <div className="flex items-center justify-between">

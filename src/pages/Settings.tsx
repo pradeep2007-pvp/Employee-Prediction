@@ -198,7 +198,6 @@ export function Settings() {
         <div className="space-y-4">
           <Input
             label="New Password"
-            type="password"
             isPassword
             placeholder="Enter new password"
             value={newPassword}
@@ -206,7 +205,6 @@ export function Settings() {
           />
           <Input
             label="Confirm Password"
-            type="password"
             isPassword
             placeholder="Re-enter new password"
             value={confirmPassword}
