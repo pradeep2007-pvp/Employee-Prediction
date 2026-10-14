@@ -8,7 +8,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, isPassword, className = '', id, ...props }, ref) => {
+  ({ label, error, isPassword, className = '', id, type, ...props }, ref) => {
     const [showPassword, setShowPassword] = useState(false);
     const inputId = id || props.name;
 
@@ -23,7 +23,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             id={inputId}
-            type={isPassword ? (showPassword ? 'text' : 'password') : props.type || 'text'}
+            type={isPassword ? (showPassword ? 'text' : 'password') : type || 'text'}
             className={`input-base ${error ? 'border-red-400 focus:ring-red-500/30 focus:border-red-500' : ''} ${isPassword ? 'pr-11' : ''} ${className}`}
             {...props}
           />
